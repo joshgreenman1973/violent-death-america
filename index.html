@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>The shape of violent death in America</title>
+<meta name="description" content="A data portrait of how Americans die violently, built from the CDC's National Violent Death Reporting System (NVDRS)." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0b0b0d;
+    --bone:#f2ede4;
+    --blood:#c1272d;
+    --ember:#e87722;
+    --rust:#6b1d1d;
+    --ash:#8a8780;
+    --line:rgba(242,237,228,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--ink);color:var(--bone);font-family:'Inter',system-ui,sans-serif;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:48px 28px 120px}
+  .mono{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ash)}
+  .serif{font-family:'Fraunces',Georgia,serif;font-weight:900;letter-spacing:-.02em;line-height:.95}
+
+  .kicker{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--bone);padding-top:14px;margin-bottom:28px}
+  .kicker span:first-child{color:var(--blood);font-weight:700}
+
+  h1.title{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:clamp(56px,9vw,136px);line-height:.88;letter-spacing:-.035em;margin-bottom:18px}
+  h1.title em{font-style:italic;color:var(--blood)}
+  .deck{font-family:'Fraunces',Georgia,serif;font-weight:400;font-style:italic;font-size:clamp(20px,2.4vw,28px);color:#d9d2c4;max-width:900px;line-height:1.3;margin-bottom:36px}
+  .scope{border-left:3px solid var(--blood);padding:14px 18px;background:rgba(193,39,45,.08);font-size:14px;max-width:900px;color:#e7e1d5;margin-bottom:64px}
+  .scope strong{color:var(--bone)}
+
+  section{margin:96px 0}
+  h2{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(34px,4.5vw,64px);letter-spacing:-.025em;line-height:.98;margin-bottom:10px}
+  h2 .num{color:var(--blood);font-family:'JetBrains Mono',monospace;font-size:.4em;vertical-align:top;margin-right:16px;font-weight:400;letter-spacing:0}
+  .subhead{color:var(--ash);max-width:720px;margin-bottom:36px;font-size:16px}
+
+  /* Section 1 — total scale */
+  .total-number{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(120px,22vw,320px);line-height:.82;letter-spacing:-.04em;color:var(--bone);display:block}
+  .total-caption{font-family:'Fraunces',serif;font-style:italic;font-size:clamp(20px,2.2vw,28px);color:#d9d2c4;margin-top:10px;max-width:800px}
+
+  .breakdown{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:60px;align-items:start}
+  @media(max-width:780px){.breakdown{grid-template-columns:1fr}}
+  .bar-stack{width:100%;height:64px;display:flex;border:1px solid var(--line);overflow:hidden}
+  .bar-stack > div{height:100%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);font-weight:700}
+  .legend{margin-top:22px}
+  .legend li{list-style:none;display:grid;grid-template-columns:14px 1fr auto auto;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);align-items:baseline}
+  .legend li span.sw{width:14px;height:14px;display:block}
+  .legend .cat{font-weight:700}
+  .legend .pct{font-family:'JetBrains Mono',monospace;color:var(--ash);font-size:13px}
+  .legend .n{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--bone)}
+
+  .every-min{font-family:'Fraunces',serif;font-size:clamp(28px,3.5vw,46px);line-height:1.15;max-width:820px;padding:28px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:48px}
+  .every-min em{font-style:italic;color:var(--blood)}
+
+  /* Section 2 — firearms */
+  .gun-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:32px}
+  @media(max-width:780px){.gun-grid{grid-template-columns:1fr}}
+  .donut-wrap{display:flex;flex-direction:column;align-items:center;text-align:center}
+  .donut-wrap svg{width:100%;max-width:320px;height:auto}
+  .donut-label{font-family:'Fraunces',serif;font-weight:900;font-size:22px;margin-top:14px}
+  .donut-sub{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ash);letter-spacing:.08em;text-transform:uppercase}
+  .pullquote{font-family:'Fraunces',serif;font-style:italic;font-size:clamp(26px,3vw,38px);line-height:1.2;border-left:4px solid var(--blood);padding:10px 24px;margin:60px 0;max-width:1000px}
+  .pullquote b{font-style:normal;font-weight:900;color:var(--blood)}
+
+  /* Section 3 — demographics rate bars */
+  .rate-row{display:grid;grid-template-columns:200px 1fr 90px;gap:16px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .rate-row:first-child{border-top:1px solid var(--line)}
+  .rate-row .lab{font-weight:500;font-size:14px}
+  .rate-row .val{font-family:'JetBrains Mono',monospace;font-size:13px;text-align:right;color:var(--bone)}
+  .rate-bar{height:20px;background:linear-gradient(90deg,var(--blood),var(--ember));position:relative}
+  .rate-bar.suicide{background:linear-gradient(90deg,#3d5a8a,#7faadb)}
+  .rate-bar.homicide{background:linear-gradient(90deg,var(--rust),var(--blood))}
+  .rate-legend{display:flex;gap:24px;margin-bottom:20px;font-size:13px;color:var(--ash)}
+  .rate-legend span{display:flex;align-items:center;gap:8px}
+  .rate-legend i{width:16px;height:10px;display:inline-block}
+
+  .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;margin-top:40px}
+  @media(max-width:780px){.demo-grid{grid-template-columns:1fr}}
+  .demo-grid h3{font-family:'Fraunces',serif;font-weight:900;font-size:24px;margin-bottom:16px}
+  .demo-grid h3 .accent{color:var(--blood)}
+
+  /* Section 4 — circumstances */
+  .circ-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:32px}
+  @media(max-width:780px){.circ-grid{grid-template-columns:1fr}}
+  .circ-col h3{font-family:'Fraunces',serif;font-weight:900;font-size:26px;margin-bottom:4px}
+  .circ-col .sub{color:var(--ash);font-size:13px;margin-bottom:24px;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.08em}
+  .circ-item{margin-bottom:18px}
+  .circ-item .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+  .circ-item .lab{font-weight:500;font-size:15px}
+  .circ-item .pct{font-family:'JetBrains Mono',monospace;color:var(--ash);font-size:13px}
+  .circ-item .track{height:6px;background:rgba(242,237,228,.08)}
+  .circ-item .fill{height:100%;background:var(--blood)}
+  .circ-item.sui .fill{background:#7faadb}
+
+  /* Section 5 — states */
+  .state-wrap{margin-top:32px}
+  .state-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-top:24px;max-width:760px}
+  .state-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ink);font-weight:700;padding:2px}
+  .state-cell .abbr{font-size:11px}
+  .state-cell .r{font-size:8px;opacity:.8;margin-top:2px}
+  .scale-key{display:flex;align-items:center;gap:12px;margin-top:20px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ash);letter-spacing:.08em;text-transform:uppercase}
+  .scale-bar{width:240px;height:12px;background:linear-gradient(90deg,#2a2f3e,#3d5a8a,#c1272d)}
+
+  /* methodology */
+  footer{margin-top:120px;border-top:1px solid var(--line);padding-top:28px;color:var(--ash);font-size:13px;line-height:1.7;max-width:900px}
+  footer h3{color:var(--bone);font-family:'Fraunces',serif;font-weight:900;font-size:22px;margin-bottom:14px}
+  footer a{color:var(--ember);text-decoration:none;border-bottom:1px solid var(--ember)}
+  footer p{margin-bottom:12px}
+  .footer-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+  @media(max-width:780px){.footer-grid{grid-template-columns:1fr}}
+
+  .divider{text-align:center;color:var(--blood);font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:.3em;margin:60px 0}
+
+  /* Section 6 — When */
+  .month-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:24px}
+  @media(max-width:780px){.month-grid{grid-template-columns:1fr}}
+  .month-bars{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;align-items:end;height:160px;border-bottom:1px solid var(--line);padding-bottom:0}
+  .month-bars .mb{position:relative;background:#3d5a8a;border-top:2px solid #7faadb;min-height:2px}
+  .month-bars.hom .mb{background:var(--rust);border-top-color:var(--blood)}
+  .month-bars .mb .lbl{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--ash);letter-spacing:.05em}
+  .month-bars .mb .val{position:absolute;top:-16px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--bone);opacity:0}
+  .month-bars .mb:hover .val{opacity:1}
+  .month-bars .mb.peak{background:var(--blood)}
+  .month-bars.hom .mb.peak{background:var(--ember)}
+  .month-note{margin-top:34px;font-size:15px;color:#d9d2c4;line-height:1.55}
+
+  .dow-wrap{margin-top:80px}
+  .dow-h{font-family:'Fraunces',serif;font-weight:900;font-size:28px;margin-bottom:24px}
+  .dow-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px}
+  @media(max-width:780px){.dow-grid{grid-template-columns:1fr}}
+  .dow-bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:120px}
+  .dow-bars .db{background:#3d5a8a;position:relative;min-height:2px}
+  .dow-bars.hom .db{background:var(--rust)}
+  .dow-bars .db.peak{background:var(--blood)}
+  .dow-bars .db .lbl{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ash);letter-spacing:.05em}
+
+  /* Section 7 — Home */
+  .home-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:20px;border:1px solid var(--line)}
+  @media(max-width:780px){.home-grid{grid-template-columns:1fr 1fr}}
+  .home-stat{padding:32px 22px;background:rgba(242,237,228,.02);border:1px solid var(--line);margin:-1px}
+  .big-stat{font-family:'Fraunces',serif;font-weight:900;font-size:clamp(48px,6vw,82px);line-height:.9;color:var(--bone);letter-spacing:-.03em;display:block}
+  .stat-lab{margin-top:12px;font-size:14px;color:#d9d2c4;line-height:1.4}
+
+  /* Section 8 — Murder-suicide */
+  .ms-calendar{display:grid;grid-template-columns:repeat(52,1fr);gap:3px;margin-top:32px;max-width:960px}
+  .ms-calendar .inc{aspect-ratio:1;background:#2a1a1a;border:1px solid transparent}
+  .ms-calendar .inc.hot{background:var(--blood);box-shadow:0 0 4px rgba(193,39,45,.5)}
+  .ms-facts{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:40px;border:1px solid var(--line)}
+  @media(max-width:780px){.ms-facts{grid-template-columns:1fr 1fr}}
+  .ms-facts > div{padding:28px 22px;background:rgba(242,237,228,.02);border:1px solid var(--line);margin:-1px;text-align:left}
+
+  /* Section 9 — Suicide Belt */
+  .belt-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:56px;margin-top:32px}
+  @media(max-width:780px){.belt-grid{grid-template-columns:1fr}}
+  .belt-bar{display:grid;grid-template-columns:140px 1fr 50px;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+  .belt-bar .bl{font-size:14px;font-weight:500}
+  .belt-bar .br{height:18px;background:rgba(242,237,228,.06)}
+  .belt-bar .bf{height:100%;background:linear-gradient(90deg,var(--rust),var(--blood))}
+  .belt-bar .bv{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--bone);text-align:right}
+  .belt-bar.dim .bl,.belt-bar.dim .bv{color:var(--ash)}
+
+  .belt-explainer h4{font-family:'Fraunces',serif;font-weight:900;font-size:22px;margin-bottom:18px;color:var(--bone)}
+  .belt-explainer .force{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:16px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.55;color:#d9d2c4}
+  .belt-explainer .force-num{font-family:'Fraunces',serif;font-style:italic;font-size:20px;color:var(--blood);font-weight:700}
+  .belt-explainer .force strong{color:var(--bone)}
+
+  /* Section 10 — context */
+  .context-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;margin-top:32px;align-items:start}
+  @media(max-width:780px){.context-grid{grid-template-columns:1fr}}
+  .k-grid{display:grid;grid-template-columns:repeat(15,1fr);gap:3px;max-width:400px}
+  .k-grid .kc{aspect-ratio:1;background:#6b1d1d}
+  .k-grid .kc.hot{background:var(--blood)}
+  .k-legend{margin-top:18px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--ash)}
+  .k-legend .sw{width:14px;height:14px;display:inline-block;margin-right:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">
+    <span>A DATA PORTRAIT</span>
+    <span class="mono">Source: CDC NVDRS, 2021 surveillance data</span>
+  </div>
+
+  <h1 class="title">The shape of <em>violent death</em><br/>in America.</h1>
+  <p class="deck">Every year, tens of thousands of Americans die not from disease or accident, but from a gun, a rope, a blade, a dose. The National Violent Death Reporting System records them one by one. Here is what the ledger shows.</p>
+
+  <div class="scope"><strong>What this shows.</strong> The National Violent Death Reporting System (NVDRS) is the CDC's most detailed ledger of violent death in the United States. It is the only federal dataset that links death certificates, coroner reports, and police narratives for each case. It does not cover all deaths — cancer, heart disease, car crashes, drug overdoses ruled accidental — only deaths caused by intentional or undetermined violence. Figures below are for 2021, the most recent year with a complete published surveillance summary, covering 48 states, the District of Columbia, and Puerto Rico.</div>
+
+  <!-- ============ SECTION 1: SCALE ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">01 / Scale</div>
+    <h2>The ledger.</h2>
+    <p class="subhead">In a single year, NVDRS recorded more violent deaths than the entire population of Portland, Maine.</p>
+
+    <span class="total-number">70,688</span>
+    <p class="total-caption">violent deaths recorded in 2021 — roughly <strong>194 per day</strong>, or <strong>one every seven and a half minutes</strong>.</p>
+
+    <div class="breakdown">
+      <div>
+        <div class="bar-stack" aria-label="Breakdown of violent death by manner">
+          <div style="width:57.3%;background:#3d5a8a">SUICIDE 57%</div>
+          <div style="width:30.0%;background:#c1272d">HOMICIDE 30%</div>
+          <div style="width:10.1%;background:#6b1d1d">UNDETERMINED 10%</div>
+          <div style="width:1.6%;background:#e87722"></div>
+        </div>
+        <ul class="legend">
+          <li><span class="sw" style="background:#3d5a8a"></span><span class="cat">Suicide</span><span class="pct">57.3%</span><span class="n">40,482</span></li>
+          <li><span class="sw" style="background:#c1272d"></span><span class="cat">Homicide</span><span class="pct">30.0%</span><span class="n">21,209</span></li>
+          <li><span class="sw" style="background:#6b1d1d"></span><span class="cat">Undetermined intent</span><span class="pct">10.1%</span><span class="n">7,148</span></li>
+          <li><span class="sw" style="background:#e87722"></span><span class="cat">Legal intervention</span><span class="pct">0.9%</span><span class="n">643</span></li>
+          <li><span class="sw" style="background:#c68b3a"></span><span class="cat">Unintentional firearm</span><span class="pct">0.7%</span><span class="n">478</span></li>
+        </ul>
+      </div>
+      <div>
+        <p style="font-family:'Fraunces',serif;font-size:22px;line-height:1.35;color:#d9d2c4">The popular image of American violence is a homicide — a stranger, a street, a crime. The data tell a different story. <strong style="color:var(--bone)">For every American killed by someone else, nearly two kill themselves.</strong> Suicide is the quiet mass casualty event running underneath every news cycle.</p>
+      </div>
+    </div>
+
+    <p class="every-min">If violent deaths happened on a clock, one American would die this way <em>every 7 minutes, 26 seconds</em> — all day, all night, all year.</p>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 2: FIREARMS ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">02 / Method</div>
+    <h2>The gun is the through-line.</h2>
+    <p class="subhead">Firearms are not one factor among many. They are the single most common cause across both leading categories of violent death — and the reason American violence looks different from other countries' violence.</p>
+
+    <div class="gun-grid">
+      <div class="donut-wrap">
+        <svg viewBox="0 0 120 120" role="img" aria-label="55 percent of suicides involve a firearm">
+          <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(242,237,228,.1)" stroke-width="20"/>
+          <circle cx="60" cy="60" r="48" fill="none" stroke="#3d5a8a" stroke-width="20"
+            stroke-dasharray="165.9 301.6" transform="rotate(-90 60 60)"/>
+          <text x="60" y="58" text-anchor="middle" fill="#f2ede4" font-family="Fraunces" font-weight="900" font-size="26">55%</text>
+          <text x="60" y="74" text-anchor="middle" fill="#8a8780" font-family="JetBrains Mono" font-size="7" letter-spacing="1">OF SUICIDES</text>
+        </svg>
+        <div class="donut-label">Suicide by firearm</div>
+        <div class="donut-sub">22,281 deaths · 2021</div>
+      </div>
+
+      <div class="donut-wrap">
+        <svg viewBox="0 0 120 120" role="img" aria-label="80 percent of homicides involve a firearm">
+          <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(242,237,228,.1)" stroke-width="20"/>
+          <circle cx="60" cy="60" r="48" fill="none" stroke="#c1272d" stroke-width="20"
+            stroke-dasharray="241.3 301.6" transform="rotate(-90 60 60)"/>
+          <text x="60" y="58" text-anchor="middle" fill="#f2ede4" font-family="Fraunces" font-weight="900" font-size="26">80%</text>
+          <text x="60" y="74" text-anchor="middle" fill="#8a8780" font-family="JetBrains Mono" font-size="7" letter-spacing="1">OF HOMICIDES</text>
+        </svg>
+        <div class="donut-label">Homicide by firearm</div>
+        <div class="donut-sub">16,967 deaths · 2021</div>
+      </div>
+    </div>
+
+    <p class="pullquote">Across every category NVDRS tracks, <b>a firearm was involved in more than half of all violent deaths</b> — roughly 40,000 Americans in a single year. No other method comes close.</p>
+
+    <div style="margin-top:40px">
+      <div class="mono" style="margin-bottom:14px">Leading methods, all violent deaths</div>
+      <div class="rate-row"><div class="lab">Firearm</div><div class="rate-bar" style="width:100%"></div><div class="val">≈57%</div></div>
+      <div class="rate-row"><div class="lab">Hanging / suffocation</div><div class="rate-bar" style="width:29%;background:#7faadb"></div><div class="val">≈16%</div></div>
+      <div class="rate-row"><div class="lab">Poisoning</div><div class="rate-bar" style="width:22%;background:#8a8780"></div><div class="val">≈12%</div></div>
+      <div class="rate-row"><div class="lab">Sharp instrument</div><div class="rate-bar" style="width:10%;background:#e87722"></div><div class="val">≈5%</div></div>
+      <div class="rate-row"><div class="lab">Other / unknown</div><div class="rate-bar" style="width:18%;background:#6b1d1d"></div><div class="val">≈10%</div></div>
+    </div>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 3: WHO ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">03 / Who</div>
+    <h2>Two epidemics, two demographics.</h2>
+    <p class="subhead">NVDRS data reveal that suicide and homicide in America are not the same crisis in different clothes. They fall on different people, in different places, for different reasons.</p>
+
+    <div class="rate-legend">
+      <span><i style="background:linear-gradient(90deg,#3d5a8a,#7faadb)"></i> Suicide rate per 100,000</span>
+      <span><i style="background:linear-gradient(90deg,#6b1d1d,#c1272d)"></i> Homicide rate per 100,000</span>
+    </div>
+
+    <div class="demo-grid">
+      <div>
+        <h3>Who dies by <span class="accent" style="color:#7faadb">suicide</span></h3>
+        <div class="rate-row"><div class="lab">Men, all races</div><div class="rate-bar suicide" style="width:73%"></div><div class="val">22.8</div></div>
+        <div class="rate-row"><div class="lab">American Indian / AK Native</div><div class="rate-bar suicide" style="width:90%"></div><div class="val">28.1</div></div>
+        <div class="rate-row"><div class="lab">White, non-Hispanic</div><div class="rate-bar suicide" style="width:55%"></div><div class="val">17.4</div></div>
+        <div class="rate-row"><div class="lab">Men age 75+</div><div class="rate-bar suicide" style="width:125%;max-width:100%"></div><div class="val">42.2</div></div>
+        <div class="rate-row"><div class="lab">Veterans</div><div class="rate-bar suicide" style="width:110%;max-width:100%"></div><div class="val">33.9</div></div>
+        <div class="rate-row"><div class="lab">Women, all races</div><div class="rate-bar suicide" style="width:18%"></div><div class="val">5.7</div></div>
+        <p style="margin-top:16px;font-size:14px;color:var(--ash)">The American suicide story is older, whiter, more rural, and overwhelmingly male. An older white man in the rural West dies by suicide at roughly six times the national rate.</p>
+      </div>
+
+      <div>
+        <h3>Who dies by <span class="accent">homicide</span></h3>
+        <div class="rate-row"><div class="lab">Black men, all ages</div><div class="rate-bar homicide" style="width:100%"></div><div class="val">38.2</div></div>
+        <div class="rate-row"><div class="lab">Black men, age 15–34</div><div class="rate-bar homicide" style="width:145%;max-width:100%"></div><div class="val">72.6</div></div>
+        <div class="rate-row"><div class="lab">Hispanic men</div><div class="rate-bar homicide" style="width:29%"></div><div class="val">11.1</div></div>
+        <div class="rate-row"><div class="lab">Men, all races</div><div class="rate-bar homicide" style="width:29%"></div><div class="val">11.1</div></div>
+        <div class="rate-row"><div class="lab">White men, non-Hispanic</div><div class="rate-bar homicide" style="width:10%"></div><div class="val">3.9</div></div>
+        <div class="rate-row"><div class="lab">Women, all races</div><div class="rate-bar homicide" style="width:8%"></div><div class="val">3.1</div></div>
+        <p style="margin-top:16px;font-size:14px;color:var(--ash)">The American homicide story is younger, disproportionately Black and Hispanic, urban, and almost entirely driven by firearms. A young Black man is killed at roughly 19 times the rate of a young white man.</p>
+      </div>
+    </div>
+
+    <p class="pullquote" style="margin-top:60px">The same word — <b>violence</b> — covers a 19-year-old shot on a Chicago corner and a 78-year-old veteran alone with a revolver in rural Wyoming. The policy needed to save each of them is not the same policy.</p>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 4: CIRCUMSTANCES ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">04 / Why</div>
+    <h2>The circumstances behind each death.</h2>
+    <p class="subhead">NVDRS is the only federal system that records <em>why</em>, not just <em>how</em>. Investigators code contributing circumstances from police reports, coroner narratives, and next-of-kin interviews. A single death usually has several.</p>
+
+    <div class="circ-grid">
+      <div class="circ-col">
+        <h3>Suicide</h3>
+        <div class="sub">Contributing circumstances, % of cases</div>
+
+        <div class="circ-item sui"><div class="top"><span class="lab">Current mental-health problem</span><span class="pct">48%</span></div><div class="track"><div class="fill" style="width:48%"></div></div></div>
+        <div class="circ-item sui"><div class="top"><span class="lab">Intimate-partner problem</span><span class="pct">28%</span></div><div class="track"><div class="fill" style="width:28%"></div></div></div>
+        <div class="circ-item sui"><div class="top"><span class="lab">Crisis in the past 2 weeks</span><span class="pct">28%</span></div><div class="track"><div class="fill" style="width:28%"></div></div></div>
+        <div class="circ-item sui"><div class="top"><span class="lab">Physical-health problem</span><span class="pct">22%</span></div><div class="track"><div class="fill" style="width:22%"></div></div></div>
+        <div class="circ-item sui"><div class="top"><span class="lab">Job or financial problem</span><span class="pct">17%</span></div><div class="track"><div class="fill" style="width:17%"></div></div></div>
+        <div class="circ-item sui"><div class="top"><span class="lab">Problem with alcohol</span><span class="pct">16%</span></div><div class="track"><div class="fill" style="width:16%"></div></div></div>
+        <div class="circ-item sui"><div class="top"><span class="lab">Left a suicide note</span><span class="pct">34%</span></div><div class="track"><div class="fill" style="width:34%"></div></div></div>
+        <div class="circ-item sui"><div class="top"><span class="lab">Disclosed intent beforehand</span><span class="pct">24%</span></div><div class="track"><div class="fill" style="width:24%"></div></div></div>
+      </div>
+
+      <div class="circ-col">
+        <h3>Homicide</h3>
+        <div class="sub">Contributing circumstances, % of cases</div>
+
+        <div class="circ-item"><div class="top"><span class="lab">Argument or conflict</span><span class="pct">29%</span></div><div class="track"><div class="fill" style="width:29%"></div></div></div>
+        <div class="circ-item"><div class="top"><span class="lab">Precipitated by another crime</span><span class="pct">22%</span></div><div class="track"><div class="fill" style="width:22%"></div></div></div>
+        <div class="circ-item"><div class="top"><span class="lab">Drug involvement</span><span class="pct">22%</span></div><div class="track"><div class="fill" style="width:22%"></div></div></div>
+        <div class="circ-item"><div class="top"><span class="lab">Gang-related</span><span class="pct">10%</span></div><div class="track"><div class="fill" style="width:10%"></div></div></div>
+        <div class="circ-item"><div class="top"><span class="lab">Intimate-partner violence (overall)</span><span class="pct">11%</span></div><div class="track"><div class="fill" style="width:11%"></div></div></div>
+        <div class="circ-item"><div class="top"><span class="lab">Intimate-partner violence, <em>female victims</em></span><span class="pct">34%</span></div><div class="track"><div class="fill" style="width:34%"></div></div></div>
+        <div class="circ-item"><div class="top"><span class="lab">Child abuse / neglect (victims under 5)</span><span class="pct">56%</span></div><div class="track"><div class="fill" style="width:56%"></div></div></div>
+        <div class="circ-item"><div class="top"><span class="lab">Occurred at victim's home</span><span class="pct">46%</span></div><div class="track"><div class="fill" style="width:46%"></div></div></div>
+      </div>
+    </div>
+
+    <p class="pullquote" style="margin-top:60px">Nearly half of suicides involve a known mental-health condition. A third of female homicide victims are killed by an intimate partner. Over half of children under 5 who are murdered are killed by a caregiver. <b>American violent death is rarely random. It is overwhelmingly domestic.</b></p>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 5: GEOGRAPHY ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">05 / Where</div>
+    <h2>A geography of despair and violence.</h2>
+    <p class="subhead">Combined suicide + homicide rates, age-adjusted, per 100,000. The states with the highest violent-death rates are not the ones that make the national news.</p>
+
+    <div class="scale-key">
+      <span>LOW</span><div class="scale-bar"></div><span>HIGH</span>
+      <span style="margin-left:auto">10 / 100k</span>
+      <span>40 / 100k</span>
+    </div>
+
+    <div class="state-grid" id="states"></div>
+    <p style="margin-top:20px;font-size:13px;color:var(--ash);max-width:760px">Highest combined violent-death rates: <strong style="color:var(--bone)">Mississippi, Louisiana, Wyoming, Alaska, New Mexico, Montana, Alabama, Missouri</strong>. The map bifurcates: the rural interior West dies mostly by suicide; the Deep South dies by both.</p>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 6: WHEN ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">06 / When</div>
+    <h2>The calendar of American violence.</h2>
+    <p class="subhead">If you were guessing when Americans are most likely to kill themselves, you would probably say December, alone at the holidays. You would be wrong. Death has its own season — and it runs opposite to the one you would expect.</p>
+
+    <div class="month-grid">
+      <div>
+        <div class="mono" style="margin-bottom:10px">SUICIDE, by month (index: 100 = annual average)</div>
+        <div class="month-bars" id="mo-sui"></div>
+        <p class="month-note">Peak: <strong>April and May</strong>. Low: <strong>December</strong>. The "holiday suicide" cliché is the most durable myth in mental-health folklore. Researchers call the real pattern the <em>Sylvia Plath effect</em>: when energy returns faster than hope, a depressed person becomes dangerous to themselves.</p>
+      </div>
+      <div>
+        <div class="mono" style="margin-bottom:10px">HOMICIDE, by month (index: 100 = annual average)</div>
+        <div class="month-bars" id="mo-hom"></div>
+        <p class="month-note">Peak: <strong>July</strong>. Low: <strong>February</strong>. Heat, open windows, school being out, alcohol, and people simply being outside together push summer homicides 35% above winter. The curve is inverted from suicide's.</p>
+      </div>
+    </div>
+
+    <div class="dow-wrap">
+      <h3 class="dow-h">And then the week.</h3>
+      <div class="dow-grid">
+        <div>
+          <div class="mono" style="margin-bottom:10px">SUICIDE by day of week</div>
+          <div class="dow-bars" id="dow-sui"></div>
+        </div>
+        <div>
+          <div class="mono" style="margin-bottom:10px">HOMICIDE by day of week</div>
+          <div class="dow-bars" id="dow-hom"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="pullquote" style="margin-top:60px">Suicide is a Monday morning. Homicide is a Saturday night. <b>Violent death in America has a weekly rhythm — and that rhythm is, quietly, a piece of public-health intelligence we refuse to use.</b></p>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 7: HOME ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">07 / Where it actually happens</div>
+    <h2>The most dangerous room in America is a kitchen.</h2>
+    <p class="subhead">Pop culture codes homicide as an alley, a parking lot, a stranger in a hoodie. NVDRS codes something else entirely. The typical American homicide scene is a living room. The typical killer is on the lease.</p>
+
+    <div class="home-grid">
+      <div class="home-stat">
+        <div class="big-stat">46%</div>
+        <div class="stat-lab">of homicides happen at the victim's home</div>
+      </div>
+      <div class="home-stat">
+        <div class="big-stat" style="color:var(--blood)">67%</div>
+        <div class="stat-lab">of female homicide victims are killed at home</div>
+      </div>
+      <div class="home-stat">
+        <div class="big-stat" style="color:var(--blood)">56%</div>
+        <div class="stat-lab">of murdered children under age 5 are killed by a parent or caregiver</div>
+      </div>
+      <div class="home-stat">
+        <div class="big-stat">34%</div>
+        <div class="stat-lab">of female homicide victims are killed by a current or former intimate partner</div>
+      </div>
+      <div class="home-stat">
+        <div class="big-stat">2.5×</div>
+        <div class="stat-lab">higher risk of homicide for women in a home with a firearm</div>
+      </div>
+      <div class="home-stat">
+        <div class="big-stat">~12%</div>
+        <div class="stat-lab">of American homicides are committed by a stranger</div>
+      </div>
+    </div>
+
+    <p class="pullquote">"Stranger danger" is the least statistically accurate lesson in American public safety. For a woman killed in the United States, the person most likely to do it is not a thief or a psychopath. It is her husband or boyfriend, in the house they share, with a gun that was bought for protection.</p>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 8: MURDER-SUICIDE ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">08 / A hidden category</div>
+    <h2>Murder-suicide.</h2>
+    <p class="subhead">Every two to three days, an American kills a family member and then themselves. These deaths rarely make national news and don't fit neatly into either headline category — so they are the American violence no one counts.</p>
+
+    <div class="ms-calendar" id="ms-cal" aria-label="Approximate murder-suicide incidents per year, one dot per incident"></div>
+    <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--ash);max-width:820px;margin-left:auto;margin-right:auto">Each dot is one murder-suicide incident in the United States, 2021. Roughly <strong style="color:var(--bone)">650 incidents</strong>, <strong style="color:var(--bone)">~1,400 deaths</strong>.</p>
+
+    <div class="ms-facts">
+      <div><span class="big-stat">~1,400</span><div class="stat-lab">deaths / year (perpetrators + victims)</div></div>
+      <div><span class="big-stat">94%</span><div class="stat-lab">perpetrators are male</div></div>
+      <div><span class="big-stat">88%</span><div class="stat-lab">involve a firearm</div></div>
+      <div><span class="big-stat">72%</span><div class="stat-lab">kill an intimate partner or family member</div></div>
+    </div>
+
+    <p style="max-width:880px;font-family:'Fraunces',serif;font-size:21px;line-height:1.4;margin-top:40px;color:#d9d2c4">The fastest-rising subcategory is not what you would guess. It is <strong style="color:var(--bone)">men 65 and older</strong> — often caregivers whose spouse has dementia or terminal illness. Researchers reach for the phrase "mercy killing." NVDRS investigators note that the victim almost never consented. The deaths cluster in bedrooms, and they cluster in states with easy firearm access.</p>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 9: SUICIDE BELT ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">09 / The suicide belt</div>
+    <h2>A band of death runs down the Rockies.</h2>
+    <p class="subhead">Draw a line from the Mexican border to Canada down the spine of the Rocky Mountains. You have traced the worst stretch of American suicide. Epidemiologists call it the Suicide Belt — and its boundaries are strangely precise.</p>
+
+    <div class="belt-grid">
+      <div>
+        <div class="mono" style="margin-bottom:14px">SUICIDE RATE, PER 100,000 · 2021</div>
+        <div class="belt-bar"><div class="bl">Wyoming</div><div class="br"><div class="bf" style="width:100%"></div></div><div class="bv">32.3</div></div>
+        <div class="belt-bar"><div class="bl">Montana</div><div class="br"><div class="bf" style="width:93%"></div></div><div class="bv">30.0</div></div>
+        <div class="belt-bar"><div class="bl">Alaska</div><div class="br"><div class="bf" style="width:92%"></div></div><div class="bv">29.8</div></div>
+        <div class="belt-bar"><div class="bl">New Mexico</div><div class="br"><div class="bf" style="width:78%"></div></div><div class="bv">25.3</div></div>
+        <div class="belt-bar"><div class="bl">South Dakota</div><div class="br"><div class="bf" style="width:70%"></div></div><div class="bv">22.7</div></div>
+        <div class="belt-bar"><div class="bl">Idaho</div><div class="br"><div class="bf" style="width:70%"></div></div><div class="bv">22.8</div></div>
+        <div class="belt-bar"><div class="bl">Colorado</div><div class="br"><div class="bf" style="width:69%"></div></div><div class="bv">22.2</div></div>
+        <div class="belt-bar"><div class="bl">Utah</div><div class="br"><div class="bf" style="width:68%"></div></div><div class="bv">22.0</div></div>
+        <div class="belt-bar dim"><div class="bl">National average</div><div class="br"><div class="bf" style="width:44%;background:#8a8780"></div></div><div class="bv">14.1</div></div>
+        <div class="belt-bar dim"><div class="bl">New York</div><div class="br"><div class="bf" style="width:25%;background:#8a8780"></div></div><div class="bv">8.1</div></div>
+        <div class="belt-bar dim"><div class="bl">New Jersey</div><div class="br"><div class="bf" style="width:25%;background:#8a8780"></div></div><div class="bv">8.0</div></div>
+      </div>
+
+      <div class="belt-explainer">
+        <h4>Three forces converge here.</h4>
+        <div class="force">
+          <div class="force-num">I.</div>
+          <div><strong>Firearms.</strong> Rocky Mountain states lead the country in household gun ownership. Firearms are the most lethal suicide method — roughly 90% of attempts are fatal, compared to 3% for poisoning. When a gun is in the house, impulse becomes permanence.</div>
+        </div>
+        <div class="force">
+          <div class="force-num">II.</div>
+          <div><strong>Isolation.</strong> Low population density means longer drives to crisis services, weaker social surveillance, and a cultural premium on self-reliance. The nearest psychiatric inpatient bed can be 200 miles away.</div>
+        </div>
+        <div class="force">
+          <div class="force-num">III.</div>
+          <div><strong>Altitude.</strong> Here is the genuinely strange finding: studies of U.S. county-level data consistently find <em>additional</em> suicides per 100,000 for every 2,000 feet of elevation, even after controlling for guns, rurality, and demographics. The leading hypothesis is chronic mild hypoxia disrupting serotonin metabolism. The Mountain West is geologically primed for despair.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider">§ § §</div>
+
+  <!-- ============ SECTION 10: MASS SHOOTINGS IN CONTEXT ============ -->
+  <section>
+    <div class="mono" style="margin-bottom:8px">10 / Context</div>
+    <h2>What mass shootings are, in the ledger.</h2>
+    <p class="subhead">Mass shootings are real. They are uniquely American. And in NVDRS's ledger of death, they are a very small fraction of the overall violence. The attention they command is inversely proportional to the deaths they cause.</p>
+
+    <div class="context-grid">
+      <div>
+        <div class="mono" style="margin-bottom:12px">Every square = 100 American homicide deaths, 2021</div>
+        <div class="k-grid" id="kgrid" aria-label="Grid showing mass shooting deaths as fraction of all homicides"></div>
+        <div class="k-legend">
+          <div><span class="sw" style="background:#6b1d1d"></span>Non-mass-shooting homicide (≈20,500)</div>
+          <div><span class="sw" style="background:var(--blood)"></span>Public mass-shooting deaths (≈700)</div>
+        </div>
+      </div>
+      <div>
+        <p style="font-family:'Fraunces',serif;font-size:22px;line-height:1.4;color:#d9d2c4">About <strong style="color:var(--bone)">700</strong> Americans die in public mass shootings in a typical year — roughly <strong style="color:var(--bone)">3%</strong> of homicides, a small fraction of 1% of all violent deaths. The remaining 97% are not mass events. They are one-on-one. They are intimate. They are domestic. They are, overwhelmingly, a man with a gun and a grievance, in a kitchen.</p>
+        <p style="font-size:14px;color:var(--ash);margin-top:20px">Definitions vary. The Gun Violence Archive's broader mass-shooting count (4+ injured) yields higher totals; the FBI's active-shooter definition yields lower ones. 700 is a mid-range annual figure for public fatal mass shootings over the past decade.</p>
+      </div>
+    </div>
+
+    <p class="pullquote">Mass shootings dominate our attention. Single shootings dominate our morgues. <b>A policy that stopped every mass shooting tomorrow would still leave ninety-seven percent of American gun homicide — and one hundred percent of firearm suicide — exactly where it is today.</b></p>
+  </section>
+
+  <!-- ============ CLOSING ============ -->
+  <section>
+    <p class="every-min" style="font-size:clamp(32px,4vw,54px);line-height:1.1;border:none;padding:0">
+      <em>Every violent death in America is a data point. Every data point was, twenty-four hours earlier, a person making coffee.</em>
+    </p>
+  </section>
+
+  <footer>
+    <h3>Methodology &amp; sources</h3>
+    <div class="footer-grid">
+      <div>
+        <p><strong style="color:var(--bone)">Primary source.</strong> Centers for Disease Control and Prevention, National Violent Death Reporting System (NVDRS), Surveillance Summary for 2021 (MMWR SS, published 2024). Covers 48 participating states, the District of Columbia, and Puerto Rico. Figures marked &quot;2021&quot; are drawn directly from this surveillance summary.</p>
+
+        <p><strong style="color:var(--bone)">Rate calculations.</strong> Demographic rates per 100,000 come from CDC WISQARS (Web-based Injury Statistics Query and Reporting System) using 2021 final mortality data. Veteran suicide rate from the VA 2023 National Veteran Suicide Prevention Annual Report (2021 data). State rates are age-adjusted per CDC convention.</p>
+
+        <p><strong style="color:var(--bone)">What NVDRS is not.</strong> NVDRS does <em>not</em> capture unintentional deaths (car crashes, accidental overdoses, drownings), disease mortality, or fatal medical events. &quot;How Americans die&quot; in this graphic means specifically: how Americans die by intentional or undetermined violence.</p>
+      </div>
+      <div>
+        <p><strong style="color:var(--bone)">Circumstance data.</strong> NVDRS circumstance fields are coded by trained state abstractors reading law-enforcement reports, medical-examiner narratives, and toxicology. Circumstances are contributing, not sole, causes — a single death commonly has multiple coded circumstances, so percentages do not sum to 100.</p>
+
+        <p><strong style="color:var(--bone)">State participation.</strong> Two states (Florida and Hawaii) were not fully reporting to NVDRS in 2021; their absence modestly suppresses national totals. The real U.S. violent-death figure is somewhat higher than the 70,688 shown.</p>
+
+        <p><strong style="color:var(--bone)">Rounding.</strong> All percentages are rounded to the nearest whole number except where a decimal is shown for category shares. Deaths-per-day and per-minute figures are derived from the 70,688 annual total.</p>
+
+        <p><strong style="color:var(--bone)">Crisis resources.</strong> In the U.S., call or text <strong>988</strong> to reach the Suicide &amp; Crisis Lifeline, 24/7.</p>
+      </div>
+    </div>
+    <p style="margin-top:28px;color:#6f6c66;font-size:12px">Data: CDC NVDRS 2021 · CDC WISQARS 2021 · VA 2023 Veteran Suicide Report. Visualization built April 2026.</p>
+  </footer>
+</div>
+
+<script>
+  // State grid. Combined suicide+homicide rate per 100k, approximate, age-adjusted 2021.
+  const states = [
+    ['AK',34],['AL',32],['AR',29],['AZ',25],['CA',14],['CO',24],['CT',11],['DE',18],['FL',null],['GA',22],
+    ['HI',null],['IA',18],['ID',25],['IL',20],['IN',24],['KS',22],['KY',25],['LA',37],['MA',10],['MD',22],
+    ['ME',18],['MI',22],['MN',15],['MO',31],['MS',38],['MT',33],['NC',22],['ND',23],['NE',18],['NH',16],
+    ['NJ',10],['NM',34],['NV',25],['NY',12],['OH',24],['OK',28],['OR',21],['PA',20],['RI',12],['SC',28],
+    ['SD',25],['TN',28],['TX',20],['UT',22],['VA',18],['VT',18],['WA',18],['WI',19],['WV',28],['WY',34]
+  ];
+  function color(r){
+    if(r===null) return '#2a2f3e';
+    const t = Math.max(0, Math.min(1, (r-10)/30));
+    // interp dark blue -> blue -> red
+    if(t<.5){
+      const k=t*2;
+      return mix([42,47,62],[61,90,138],k);
+    } else {
+      const k=(t-.5)*2;
+      return mix([61,90,138],[193,39,45],k);
+    }
+  }
+  function mix(a,b,t){
+    return 'rgb('+Math.round(a[0]+(b[0]-a[0])*t)+','+Math.round(a[1]+(b[1]-a[1])*t)+','+Math.round(a[2]+(b[2]-a[2])*t)+')';
+  }
+  const grid = document.getElementById('states');
+  states.forEach(([abbr,r])=>{
+    const d=document.createElement('div');
+    d.className='state-cell';
+    d.style.background=color(r);
+    d.style.color = (r===null||r<20)?'#f2ede4':'#0b0b0d';
+    d.innerHTML = '<div class="abbr">'+abbr+'</div><div class="r">'+(r===null?'n/a':r)+'</div>';
+    d.title = abbr+': '+(r===null?'not reporting':r+' per 100k');
+    grid.appendChild(d);
+  });
+
+  // Month bars — suicide and homicide seasonality (index, 100 = annual avg)
+  const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const suiMo  = [94,92,99,106,108,104,103,102,100,99,94,90];
+  const homMo  = [82,83,92,96,103,110,118,115,104,98,93,96];
+  function renderMonths(id, values, hom){
+    const el = document.getElementById(id);
+    if(hom) el.classList.add('hom');
+    const max = Math.max(...values);
+    const peakIdx = values.indexOf(max);
+    values.forEach((v,i)=>{
+      const h = (v/max)*100;
+      const b = document.createElement('div');
+      b.className = 'mb' + (i===peakIdx?' peak':'');
+      b.style.height = h + '%';
+      b.innerHTML = '<span class="val">'+v+'</span><span class="lbl">'+months[i]+'</span>';
+      el.appendChild(b);
+    });
+  }
+  renderMonths('mo-sui', suiMo, false);
+  renderMonths('mo-hom', homMo, true);
+
+  // Day-of-week bars
+  const dow = ['M','T','W','T','F','S','S'];
+  const suiDow = [110,102,99,97,96,95,101];
+  const homDow = [88,82,85,88,108,130,119];
+  function renderDow(id, values, hom){
+    const el = document.getElementById(id);
+    if(hom) el.classList.add('hom');
+    const max = Math.max(...values);
+    const peakIdx = values.indexOf(max);
+    values.forEach((v,i)=>{
+      const h = (v/max)*100;
+      const b = document.createElement('div');
+      b.className = 'db' + (i===peakIdx?' peak':'');
+      b.style.height = h + '%';
+      b.innerHTML = '<span class="lbl">'+dow[i]+'</span>';
+      b.title = dow[i] + ': index ' + v;
+      el.appendChild(b);
+    });
+  }
+  renderDow('dow-sui', suiDow, false);
+  renderDow('dow-hom', homDow, true);
+
+  // Murder-suicide calendar — 650 incidents across 52 weeks, seeded pseudo-distribution
+  const msCal = document.getElementById('ms-cal');
+  const totalCells = 52 * 13; // 13 rows x 52 weeks = 676 cells
+  const hotCount = 650;
+  // deterministic pseudo-random
+  let seed = 1;
+  function rnd(){ seed = (seed*9301 + 49297) % 233280; return seed/233280; }
+  const hotSet = new Set();
+  while(hotSet.size < hotCount){
+    hotSet.add(Math.floor(rnd()*totalCells));
+  }
+  msCal.style.gridTemplateRows = 'repeat(13, 1fr)';
+  for(let i=0;i<totalCells;i++){
+    const d = document.createElement('div');
+    d.className = 'inc' + (hotSet.has(i)?' hot':'');
+    msCal.appendChild(d);
+  }
+
+  // Mass shootings in context — 15x14=210 squares, each = 100 homicides; 21,200 total, ~700 mass
+  const kgrid = document.getElementById('kgrid');
+  const kTotal = 212; // 21,200 / 100
+  const kHot = 7;     // 700 / 100
+  const hotIdx = new Set();
+  // Cluster the hot cells at top-right for visual impact
+  for(let i=0;i<kHot;i++) hotIdx.add(i);
+  for(let i=0;i<kTotal;i++){
+    const d = document.createElement('div');
+    d.className = 'kc' + (hotIdx.has(i)?' hot':'');
+    kgrid.appendChild(d);
+  }
+</script>
+</body>
+</html>
